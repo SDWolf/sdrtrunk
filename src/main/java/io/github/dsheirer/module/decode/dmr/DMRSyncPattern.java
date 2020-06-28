@@ -60,7 +60,9 @@ public enum DMRSyncPattern
             DIRECT_MODE_VOICE_TIMESLOT_0, DIRECT_MODE_VOICE_TIMESLOT_1, MOBILE_STATION_REVERSE_CHANNEL);
 
     //Valid sync patterns (excluding the sync-less voice patterns)
-    public static final EnumSet<DMRSyncPattern> SYNC_PATTERNS = EnumSet.range(BASE_STATION_VOICE, RESERVED);
+    public static final EnumSet<DMRSyncPattern> SYNC_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE,
+        MOBILE_STATION_DATA, MOBILE_STATION_VOICE, DIRECT_MODE_DATA_TIMESLOT_0, DIRECT_MODE_DATA_TIMESLOT_1,
+        DIRECT_MODE_VOICE_TIMESLOT_0, DIRECT_MODE_VOICE_TIMESLOT_1, MOBILE_STATION_REVERSE_CHANNEL);
 
     //Sync patterns containing a Common Announcement Channel (CACH)
     public static final EnumSet<DMRSyncPattern> CACH_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE);

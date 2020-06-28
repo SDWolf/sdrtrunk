@@ -25,7 +25,6 @@ import io.github.dsheirer.bits.SoftSyncDetector;
 import io.github.dsheirer.dsp.psk.pll.IPhaseLockedLoop;
 import io.github.dsheirer.dsp.symbol.Dibit;
 import io.github.dsheirer.dsp.symbol.ISyncDetectListener;
-import io.github.dsheirer.module.decode.p25.phase1.P25P1DataUnitID;
 import io.github.dsheirer.sample.Listener;
 
 public class DMRSyncDetector implements Listener<Dibit>
@@ -62,43 +61,43 @@ public class DMRSyncDetector implements Listener<Dibit>
         //TODO: update the sync lost parameter to 48 bits ....
 
         //TODO: only enable the phase inversion detectors when we're in a sync-lost state
-        mMatcher = new MultiSyncPatternMatcher(syncDetectListener, P25P1DataUnitID.LOGICAL_LINK_DATA_UNIT_1.getMessageLength(), 48);
-        mBSDSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.BASE_STATION_DATA,SYNC_MATCH_THRESHOLD, syncDetectListener);
-        mMSDSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.MOBILE_STATION_DATA,SYNC_MATCH_THRESHOLD, syncDetectListener);
-        mBSVSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.MOBILE_STATION_VOICE,SYNC_MATCH_THRESHOLD, syncDetectListener);
-        mMSVSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.BASE_STATION_VOICE,SYNC_MATCH_THRESHOLD, syncDetectListener);
-        mTDMATS1D = new DMRSoftSyncDetector(DMRSyncPattern.MOBILE_STATION_REVERSE_CHANNEL,SYNC_MATCH_THRESHOLD, syncDetectListener);
+//        mMatcher = new MultiSyncPatternMatcher(syncDetectListener, P25P1DataUnitID.LOGICAL_LINK_DATA_UNIT_1.getMessageLength(), 48);
+//        mBSDSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.BASE_STATION_DATA,SYNC_MATCH_THRESHOLD, syncDetectListener);
+//        mMSDSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.MOBILE_STATION_DATA,SYNC_MATCH_THRESHOLD, syncDetectListener);
+//        mBSVSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.MOBILE_STATION_VOICE,SYNC_MATCH_THRESHOLD, syncDetectListener);
+//        mMSVSyncDetector = new DMRSoftSyncDetector(DMRSyncPattern.BASE_STATION_VOICE,SYNC_MATCH_THRESHOLD, syncDetectListener);
+//        mTDMATS1D = new DMRSoftSyncDetector(DMRSyncPattern.MOBILE_STATION_REVERSE_CHANNEL,SYNC_MATCH_THRESHOLD, syncDetectListener);
 
 
-        mInversionDetector90CW = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_P90,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_90_DEGREES);
-        mInversionDetector90CCW = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_N90,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, -FREQUENCY_PHASE_CORRECTION_90_DEGREES);
-        mInversionDetector180 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_180,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_180_DEGREES);
-        mMatcher.add(mInversionDetector90CW);
-        mMatcher.add(mInversionDetector90CCW);
-        mMatcher.add(mInversionDetector180);
-
-        mInversionDetector90CW_1 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_VOICE_P90,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_90_DEGREES);
-        mInversionDetector90CCW_1 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_VOICE_N90,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, -FREQUENCY_PHASE_CORRECTION_90_DEGREES);
-        mInversionDetector180_1 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_VOICE_180,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_180_DEGREES);
-        mMatcher.add(mInversionDetector90CW_1);
-        mMatcher.add(mInversionDetector90CCW_1);
-        mMatcher.add(mInversionDetector180_1);
-
-        mInversionDetector90CW_2 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_P90,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_90_DEGREES);
-        mInversionDetector90CCW_2 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_N90,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, -FREQUENCY_PHASE_CORRECTION_90_DEGREES);
-        mInversionDetector180_2 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_180,
-                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_180_DEGREES);
-        mMatcher.add(mInversionDetector90CW_2);
-        mMatcher.add(mInversionDetector90CCW_2);
-        mMatcher.add(mInversionDetector180_2);
+//        mInversionDetector90CW = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_P90,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_90_DEGREES);
+//        mInversionDetector90CCW = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_N90,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, -FREQUENCY_PHASE_CORRECTION_90_DEGREES);
+//        mInversionDetector180 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_180,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_180_DEGREES);
+//        mMatcher.add(mInversionDetector90CW);
+//        mMatcher.add(mInversionDetector90CCW);
+//        mMatcher.add(mInversionDetector180);
+//
+//        mInversionDetector90CW_1 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_VOICE_P90,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_90_DEGREES);
+//        mInversionDetector90CCW_1 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_VOICE_N90,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, -FREQUENCY_PHASE_CORRECTION_90_DEGREES);
+//        mInversionDetector180_1 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_VOICE_180,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_180_DEGREES);
+//        mMatcher.add(mInversionDetector90CW_1);
+//        mMatcher.add(mInversionDetector90CCW_1);
+//        mMatcher.add(mInversionDetector180_1);
+//
+//        mInversionDetector90CW_2 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_P90,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_90_DEGREES);
+//        mInversionDetector90CCW_2 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_N90,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, -FREQUENCY_PHASE_CORRECTION_90_DEGREES);
+//        mInversionDetector180_2 = new PLLPhaseInversionDetector(DMRSyncPattern.MOBILE_STATION_DATA_180,
+//                phaseLockedLoop, DEFAULT_SAMPLE_RATE, FREQUENCY_PHASE_CORRECTION_180_DEGREES);
+//        mMatcher.add(mInversionDetector90CW_2);
+//        mMatcher.add(mInversionDetector90CCW_2);
+//        mMatcher.add(mInversionDetector180_2);
 
 
         mMatcher.add(mBSDSyncDetector);

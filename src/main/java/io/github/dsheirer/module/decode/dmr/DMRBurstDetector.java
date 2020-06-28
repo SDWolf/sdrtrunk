@@ -23,6 +23,7 @@ import io.github.dsheirer.bits.BitSetFullException;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.dsp.psk.pll.IPhaseLockedLoop;
 import io.github.dsheirer.dsp.symbol.Dibit;
+import io.github.dsheirer.dsp.symbol.QPSKCarrierLock;
 import io.github.dsheirer.sample.Listener;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -60,21 +61,9 @@ public class DMRBurstDetector implements Listener<Dibit>, IDMRSyncDetectListener
     }
 
     @Override
-    public void syncDetected(int bitErrors)
-    {
-        //not used
-    }
-
-    @Override
-    public void syncDetected(int bitErrors, DMRSyncPattern pattern) {
+    public void syncDetected(DMRSyncPattern pattern, QPSKCarrierLock carrierLock, int bitErrors) {
         mDibitsProcessed = 0;
         parseBurst(bitErrors, pattern);
-    }
-
-    @Override
-    public void syncLost(int bitProcessed)
-    {
-        dispatchSyncLoss(0);
     }
 
     private void dispatchSyncLoss(int bitsProcessed)
@@ -111,7 +100,8 @@ public class DMRBurstDetector implements Listener<Dibit>, IDMRSyncDetectListener
             }
             if(mBurstDetectListener != null)
             {
-                mBurstDetectListener.burstDetectedWithSync(mesg, pattern, bitErrorCount);
+                mesg.setCorrectedBitCount(bitErrorCount);
+                mBurstDetectListener.burstDetected(mesg, pattern);
             }
         }
     }

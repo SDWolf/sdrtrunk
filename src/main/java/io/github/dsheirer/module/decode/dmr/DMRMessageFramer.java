@@ -322,16 +322,16 @@ public class DMRMessageFramer implements Listener<Dibit>, IDMRBurstDetectListene
     }
 
     @Override
-    public void burstDetectedWithSync(CorrectedBinaryMessage binaryMessage, DMRSyncPattern pattern, int bitErrors)
+    public void burstDetected(CorrectedBinaryMessage binaryMessage, DMRSyncPattern pattern)
     {
         slotSyncMatrix[mCurrentSlot] = true; // current slot is synced
         if(pattern == DMRSyncPattern.MOBILE_STATION_VOICE || pattern == DMRSyncPattern.BASE_STATION_VOICE)
         {
-            processVoiceBurst(binaryMessage, pattern, bitErrors);
+            processVoiceBurst(binaryMessage, pattern, binaryMessage.getCorrectedBitCount());
         }
         else if(pattern == DMRSyncPattern.MOBILE_STATION_DATA || pattern == DMRSyncPattern.BASE_STATION_DATA)
         {
-            processDataBurst(binaryMessage, pattern, bitErrors);
+            processDataBurst(binaryMessage, pattern, binaryMessage.getCorrectedBitCount());
         }
         mBinaryMessage = new CorrectedBinaryMessage(288);
         mCurrentSlot = (mCurrentSlot == 0 ? 1 : 0);

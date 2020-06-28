@@ -1,7 +1,9 @@
 package io.github.dsheirer.module.decode.dmr;
 
 import io.github.dsheirer.dsp.symbol.Dibit;
+import io.github.dsheirer.dsp.symbol.QPSKCarrierLock;
 import io.github.dsheirer.sample.Listener;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Detector for DMR sync patterns that also includes built-in support for detecting PLL phase lock errors.
@@ -10,6 +12,7 @@ public class DMRSyncDetectorNew implements Listener<Dibit>
 {
     private static long SYNC_MASK = 0xFFFFFFFFFFFFl;
 
+    private IDMRSyncDetectListener mSyncDetectListener;
     private int mMaxBitErrors;
     private long mCurrentSyncValue;
     private long mErrorPattern;
@@ -19,17 +22,22 @@ public class DMRSyncDetectorNew implements Listener<Dibit>
      * Constructs an instance
      * @param maxBitErrors allowed for matching any of the sync patterns
      */
-    public DMRSyncDetectorNew(int maxBitErrors)
+    public DMRSyncDetectorNew(IDMRSyncDetectListener listener, int maxBitErrors)
     {
+        Validate.notNull(listener, "Sync detector cannot be null");
+        Validate.inclusiveBetween(0, 24, maxBitErrors,
+            "Max (allowable) bit errors for sync match must be between 0 and 24");
+        mSyncDetectListener = listener;
         mMaxBitErrors = maxBitErrors;
     }
 
     @Override
     public void receive(Dibit dibit)
     {
-        Long.rotateLeft(mCurrentSyncValue, 2);
+        mCurrentSyncValue = Long.rotateLeft(mCurrentSyncValue, 2);
         mCurrentSyncValue &= SYNC_MASK;
         mCurrentSyncValue += dibit.getValue();
+        String a = Long.toHexString(mCurrentSyncValue).toUpperCase();
         checkSync();
     }
 
@@ -44,7 +52,7 @@ public class DMRSyncDetectorNew implements Listener<Dibit>
 
             if(mErrorPattern == 0)
             {
-                broadastSyncDetected(pattern, 0);
+                mSyncDetectListener.syncDetected(pattern, QPSKCarrierLock.NORMAL, 0);
                 return;
             }
 
@@ -52,18 +60,29 @@ public class DMRSyncDetectorNew implements Listener<Dibit>
 
             if(mPatternMatchBitErrorCount <= mMaxBitErrors)
             {
-                broadastSyncDetected(pattern, mPatternMatchBitErrorCount);
+                mSyncDetectListener.syncDetected(pattern, QPSKCarrierLock.NORMAL, mPatternMatchBitErrorCount);
+                return;
+            }
+
+            //For PLL mis-aligned lock patterns, allow only exact pattern matches
+            if((mCurrentSyncValue ^ pattern.getPlus90Pattern()) == 0)
+            {
+                mSyncDetectListener.syncDetected(pattern, QPSKCarrierLock.PLUS_90, 0);
+                return;
+            }
+
+            if((mCurrentSyncValue ^ pattern.getMinus90Pattern()) == 0)
+            {
+                mSyncDetectListener.syncDetected(pattern, QPSKCarrierLock.MINUS_90, 0);
+                return;
+            }
+
+            if((mCurrentSyncValue ^ pattern.getInvertedPattern()) == 0)
+            {
+                mSyncDetectListener.syncDetected(pattern, QPSKCarrierLock.INVERTED, 0);
                 return;
             }
         }
-
-        //TODO: iterate each of the phase misalignment sync patterns with more stringent max allowable bit errors
-
-    }
-
-    private void broadastSyncDetected(DMRSyncPattern pattern, int bitErrorCount)
-    {
-
     }
 
     /**
