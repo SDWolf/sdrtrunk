@@ -77,6 +77,13 @@ public class DMRMessageProcessor implements Listener<IMessage>
                     voice.getFLCFragment(), message.getTimestamp());
                 dispatch(flco);
             }
+
+            if(voice.hasCACH())
+            {
+                CACH cach = voice.getCACH();
+                ShortLCMessage slco = mSLCAssembler.process(cach.getLCSS(), cach.getPayload(), message.getTimestamp());
+                dispatch(slco);
+            }
         }
         //Extract the Short Link Control message fragment from the DMR burst message when it has one
         else if(message instanceof DMRBurst)

@@ -29,7 +29,8 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
     private static final int BURST_DIBIT_LENGTH = 144;
     private static final int SYNC_DIBIT_OFFSET = 66;
     private static final int SYNC_DIBIT_LENGTH = 24;
-    private static final int MAX_SYNC_BIT_ERRORS = 6;
+    private static final int MAX_UNSYNCHRONIZED_SYNC_DETECT_BIT_ERRORS = 3;
+    private static final int MAX_SYNCHRONIZED_SYNC_DETECT_BIT_ERRORS = 6;
 
     /**
      * Threshold for issuing a sync loss message.  This is set to trigger once the dibit count exceeds one second of
@@ -73,13 +74,9 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
     private SyncTracker mSecondaryTracker = new SyncTracker();
     private SyncTracker mCurrentTracker = mPrimaryTracker;
 
-    private DMRSyncDetectorNew mSyncDetector;
+    private DMRSyncDetector mSyncDetector;
     private IDMRBurstDetectListener mBurstDetectListener;
     private IPhaseLockedLoop mPhaseLockedLoop;
-
-    //TODO: remove these
-    private int mDebugDibitCounter = 0;
-    private int mDebugLastDibitCount = 0;
 
     /**
      * Constructs an instance
@@ -90,7 +87,7 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
     {
         mBurstDetectListener = listener;
         mPhaseLockedLoop = phaseLockedLoop;
-        mSyncDetector = new DMRSyncDetectorNew(this, 3);
+        mSyncDetector = new DMRSyncDetector(this, MAX_UNSYNCHRONIZED_SYNC_DETECT_BIT_ERRORS);
     }
 
     /**
@@ -100,7 +97,6 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
     @Override
     public void receive(Dibit dibit)
     {
-        mDebugDibitCounter++;
         mDibitCounter++;
 
         //Feed the message buffer first to ensure buffer contains the full message when a sync is detected
@@ -119,15 +115,22 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
                 }
                 else
                 {
-                    toggleSyncTracker();
-
-                    if(!mSynchronized)
+                    if(mSynchronized)
+                    {
+                        //Even though this timeslot has lost sync, the other timeslot still reflects sync, so we
+                        //dispatch a dummy message with sync pattern = UNKNOWN to ensure the receiver is able to
+                        //track timeslot state.
+                        dispatchMessage(mCurrentTracker.getSyncPattern(), mCurrentTracker.getBitErrorCount());
+                    }
+                    else
                     {
                         //We were synchronized but now we're not.  Update the sync detector with the current message
                         //sync field contents so that we can restart sync detection from this point
                         mSyncDetector.setCurrentSyncValue(getSyncFieldValue());
                     }
                 }
+
+                toggleSyncTracker();
             }
         }
         else
@@ -236,10 +239,6 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
      */
     private void dispatchMessage(DMRSyncPattern syncPattern, int bitErrors)
     {
-        mLog.info("Dispatching Message - DIBITS [" + (mDebugDibitCounter - mDebugLastDibitCount) +
-            "] PATTERN:" + syncPattern.name() + " BIT ERRORS [" + bitErrors + "]");
-        mDebugLastDibitCount = mDebugDibitCounter;
-
         if(mDibitCounter > BURST_DIBIT_LENGTH)
         {
             processSyncLossDibits(mDibitCounter - BURST_DIBIT_LENGTH);
@@ -253,8 +252,6 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
         {
             mBurstDetectListener.burstDetected(message, syncPattern);
         }
-
-        toggleSyncTracker();
     }
 
     /**
@@ -372,7 +369,7 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
                 {
                     int bitErrors = Long.bitCount(errorPattern);
 
-                    if(bitErrors <= MAX_SYNC_BIT_ERRORS)
+                    if(bitErrors <= MAX_SYNCHRONIZED_SYNC_DETECT_BIT_ERRORS)
                     {
                         setSyncPattern(syncPattern, bitErrors);
                         return true;
@@ -384,22 +381,37 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
             switch(previousSyncPattern)
             {
                 case BASE_STATION_VOICE:
+                    setSyncPattern(DMRSyncPattern.BS_VOICE_FRAME_B, 0);
+                    return true;
+                case BS_VOICE_FRAME_B:
+                    setSyncPattern(DMRSyncPattern.BS_VOICE_FRAME_C, 0);
+                    return true;
+                case BS_VOICE_FRAME_C:
+                    setSyncPattern(DMRSyncPattern.BS_VOICE_FRAME_D, 0);
+                    return true;
+                case BS_VOICE_FRAME_D:
+                    setSyncPattern(DMRSyncPattern.BS_VOICE_FRAME_E, 0);
+                    return true;
+                case BS_VOICE_FRAME_E:
+                    setSyncPattern(DMRSyncPattern.BS_VOICE_FRAME_F, 0);
+                    return true;
+
                 case MOBILE_STATION_VOICE:
                 case DIRECT_MODE_VOICE_TIMESLOT_0:
                 case DIRECT_MODE_VOICE_TIMESLOT_1:
-                    setSyncPattern(DMRSyncPattern.VOICE_FRAME_B, 0);
+                    setSyncPattern(DMRSyncPattern.MS_VOICE_FRAME_B, 0);
                     return true;
-                case VOICE_FRAME_B:
-                    setSyncPattern(DMRSyncPattern.VOICE_FRAME_C, 0);
+                case MS_VOICE_FRAME_B:
+                    setSyncPattern(DMRSyncPattern.MS_VOICE_FRAME_C, 0);
                     return true;
-                case VOICE_FRAME_C:
-                    setSyncPattern(DMRSyncPattern.VOICE_FRAME_D, 0);
+                case MS_VOICE_FRAME_C:
+                    setSyncPattern(DMRSyncPattern.MS_VOICE_FRAME_D, 0);
                     return true;
-                case VOICE_FRAME_D:
-                    setSyncPattern(DMRSyncPattern.VOICE_FRAME_E, 0);
+                case MS_VOICE_FRAME_D:
+                    setSyncPattern(DMRSyncPattern.MS_VOICE_FRAME_E, 0);
                     return true;
-                case VOICE_FRAME_E:
-                    setSyncPattern(DMRSyncPattern.VOICE_FRAME_F, 0);
+                case MS_VOICE_FRAME_E:
+                    setSyncPattern(DMRSyncPattern.MS_VOICE_FRAME_F, 0);
                     return true;
             }
 
@@ -437,17 +449,13 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
         }, null);
 
         Path directory = Path.of("/home/denny/SDRTrunk/recordings");
-        Path path = directory.resolve("20200514_150551_9600BPS_DMR_SaiaNet_Onondaga_LCN_4.bits");
-
-        int bufferCount = 0;
+        Path path = directory.resolve("20200628_081304_9600BPS_DMR_SaiaNet_Onondaga_LCN_1.bits");
 
         try(BinaryReader reader = new BinaryReader(path, 200))
         {
             while(reader.hasNext())
             {
                 ReusableByteBuffer buffer = reader.next();
-
-//                System.out.println("Buffer " + String.valueOf(bufferCount++));
 
                 for(byte b: buffer.getBytes())
                 {
@@ -466,6 +474,5 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
         }
 
         System.out.println("Finished!");
-
     }
 }
